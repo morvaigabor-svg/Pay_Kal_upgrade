@@ -1,0 +1,55 @@
+<!-- 1. KIADÁS ELLENŐRZŐ ABLAK -->
+<div id="confirmDialog" class="dialog hidden">
+  <div class="dialog-content">
+    <h2> Ellenőrizd a kiadást</h2>
+    <div id="summary" class="summary-box"></div>
+
+    <!-- Élő folyamatjelző doboz -->
+    <div id="statusProgress" class="status-progress hidden"></div>
+
+    <div class="dialog-actions">
+      <button type="button" id="cancelButton" class="btn-secondary">Mégsem</button>
+      <button type="button" id="confirmButton" class="btn-confirm-expense">Mentés</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. BLOKK FOTÓZÁS FOLYTATÁSA ABLAK -->
+<div id="receiptDialog" class="dialog hidden">
+  <div class="dialog-content text-center">
+    <h2>📷 Blokk fotó elkészült</h2>
+    <p class="dialog-desc">Szeretnél még egy oldalt / blokkot lefotózni?</p>
+        <div class="dialog-actions vertical">
+      <button type="button" id="moreReceiptButton" class="btn-primary">➕ Újabb fotó</button>
+      <button type="button" id="finishReceiptButton" class="btn-secondary">✓ Kész, mehet tovább</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. FIGYELMEZTETŐ ABLAK BLOKK NÉLKÜLI MENTÉSHEZ -->
+<div id="noReceiptDialog" class="dialog hidden">
+  <div class="dialog-content">
+    <h2>⚠️ Nincs csatolva blokk!</h2>
+    <p class="dialog-desc">Biztos, hogy nem akartál blokkot csatolni ehhez a kiadáshoz?</p>
+    <div class="dialog-actions vertical">
+      <button type="button" id="noReceiptBackButton" class="btn-secondary">Vissza a fotózáshoz</button>
+      <button type="button" id="noReceiptContinueButton" class="btn-danger">Mentés fotó nélkül</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. BEVÉTEL ELLENŐRZŐ ABLAK -->
+<div id="incomeConfirmDialog" class="dialog hidden">
+  <div class="dialog-content">
+    <h2 class="check-title">Ellenőrizd a befizetést</h2>
+    <div id="incomeSummary" class="summary-box"></div>
+
+    <!-- Élő folyamatjelző doboz (Pótolva!) -->
+    <div id="incomeStatusProgress" class="status-progress hidden"></div>
+
+    <div class="dialog-actions">
+      <button type="button" id="cancelIncomeButton" class="btn-secondary">Vissza</button>
+      <button type="button" id="confirmIncomeButton" class="btn-confirm-income">Mentés</button>
+    </div>
+  </div>
+</div>

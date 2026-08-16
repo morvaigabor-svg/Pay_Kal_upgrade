@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1976d2">
+  <title>ExpenseTracker</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <?!= include('styles'); ?>
+</head>
+
+<body>
+  
+  <div class="container">
+    
+    <div id="unauthorizedView" class="hidden">
+      <div class="card" style="text-align: center; margin-top: 50px; padding: 30px;">
+        <h2 id="unauthorizedTitle" style="color: #1976d2; margin-bottom: 15px;">🔑 Google-fiók azonosítása</h2>
+        <p id="unauthorizedEmailText" style="font-size: 16px; color: #444; margin-bottom: 10px;">
+          Kérjük, válaszd ki a céges Piarista Google-fiókodat a belépéshez!
+        </p>
+        <p id="unauthorizedSubText" style="font-size: 14px; color: #666; margin-bottom: 20px;">
+          A PayKal használatához az engedélyezett e-mail címeddel kell bejelentkezned.
+        </p>
+        <a id="switchAccountBtn" href="#" target="_top" class="btn" style="background: #1976d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 15px;">
+          🔑 Fiók kiválasztása / Váltás
+        </a>
+      </div>
+    </div>
+
+    <!-- 1. KÉPERNYŐ: DASHBOARD -->
+    <div id="dashboardView" class="hidden">
+      <header class="paykal-header">
+        <h1>PayKal</h1>
+        <div class="subtitle">Wallet of Calasanz</div>
+      </header>
+
+      <main class="dashboard-content">
+
+        <!-- KOORDINÁTORI CSOPORTVÁLTÓ SÁV -->
+        <div id="coordinatorSelectorCard" class="card hidden" style="margin-bottom: 16px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 6px 18px; border-radius: 12px;">
+          <label for="coordinatorGroupSelect" style="font-weight: 700; color: #0369a1; font-size: 35px; margin-bottom: 3px; display: block;">
+            Koordinátori nézetválasztó:
+          </label>
+          <select id="coordinatorGroupSelect" onchange="onCoordinatorGroupChange(this)" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #0284c7; font-size: 15px; font-weight: 600; background: #ffffff; color: #0f172a;">
+          </select>
+        </div>
+
+        <div class="card balance-card">
+          <span class="balance-label">Csoport vagyona</span>
+          <h2 id="totalBalanceDisplay" class="total-balance-amount">0 Ft</h2>
+
+          <div class="balance-slider-container">
+            <div class="balance-bar-wrapper">
+              <div id="cashBar" class="balance-bar cash-bar" style="width: 50%;"></div>
+              <div id="bankBar" class="balance-bar bank-bar" style="width: 50%;"></div>
+            </div>
+          </div>
+
+          <div class="balance-grid">
+            <div class="balance-box cash-box">
+              <span class="sub-label"><span class="dot cash-dot"></span> Készpénz</span>
+              <strong id="cashBalanceDisplay" class="sub-amount">0 Ft</strong>
+            </div>
+            <div class="balance-box bank-box">
+              <span class="sub-label"><span class="dot bank-dot"></span> Számla</span>
+              <strong id="bankBalanceDisplay" class="sub-amount">0 Ft</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <!-- Projektválasztó (Városi összesítőnél elrejtve) -->
+          <div id="projectSelectWrapper" class="project-select-wrapper" style="margin-bottom: 12px;">
+            <select id="projectSelect" onchange="onProjectFilterChange(this.value)" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; font-weight: 500;">
+              <option value="ALL">-- Teljes csoportvagyon (Összvagyon) --</option>
+            </select>
+          </div>
+
+          <!-- Időintervallum gombok (Városi összesítőnél elrejtve) -->
+          <div id="timeFilterGroup" class="time-filter-group">
+            <button type="button" class="time-btn active" onclick="changeTimeFilter('1H', this)">1 H</button>
+            <button type="button" class="time-btn" onclick="changeTimeFilter('3H', this)">3 H</button>
+            <button type="button" class="time-btn" onclick="changeTimeFilter('6H', this)">6 H</button>
+            <button type="button" class="time-btn" onclick="changeTimeFilter('1E', this)">1 É</button>
+            <button type="button" class="time-btn" onclick="changeTimeFilter('2E', this)">2 É</button>
+            <button type="button" class="time-btn" onclick="changeTimeFilter('O', this)">Ö</button>
+          </div>
+
+        <div class="chart-container" style="position: relative; height: 340px; min-height: 340px;">
+  <canvas id="expenseChart"></canvas>
+</div>
+
+        <!-- AKCIÓ GOMBOK (ReadOnly nézetben rejtve) -->
+        <div id="actionButtonsGrid" class="action-buttons-grid">
+          <button type="button" id="addIncomeBtn" class="action-btn btn-income" onclick="showScreen('incomeScreen')">
+            <span class="btn-icon">💰</span>
+            <span>Bevétel hozzáadása</span>
+          </button>
+
+          <button type="button" id="addExpenseBtn" class="action-btn btn-expense" onclick="showScreen('expenseScreen')">
+            <span class="btn-icon">➖</span>
+            <span>Kiadás hozzáadása</span>
+          </button>
+
+          <button type="button" class="action-btn btn-cash" onclick="showScreen('transferScreen')">
+            <span class="btn-icon">🔄</span>
+            <span>Készpénz mozgás rögzítése</span>
+          </button>
+
+          <button type="button" class="action-btn btn-projects" onclick="openProjectModal()">
+            <span class="btn-icon">📁</span>
+            <span>Projektek kezelése</span>
+          </button>
+        </div>
+      </main>
+
+      <footer class="paykal-footer">
+        <div class="footer-logo">
+          <img src="https://drive.google.com/thumbnail?id=16g0VycktoTc1s3CgbwzGCd0leXdN3R-k" alt="Piarista Rend Magyar Tartománya" />
+        </div>
+        <div class="footer-logo">
+          <img src="https://drive.google.com/thumbnail?id=1qQJD5SY7IO_6m2CfLmT1z8QNEe_3ZFo6" alt="Kalazancius Mozgalom" />
+        </div>
+      </footer>
+    </div>
+
+    <!-- 2. KÉPERNYŐ: KIADÁS RÖGZÍTŐ -->
+<div id="expenseScreen" class="hidden">
+  <button id="backToDashBtn" class="btn-back">⬅ Vissza a Dashboardra</button>
+
+  <div class="card">
+    <h2>Kiadás rögzítése</h2>
+
+    <label for="date">Dátum *</label>
+    <input type="date" id="date">
+
+    <label for="amount">Összeg *</label>
+    <input type="number" id="amount" placeholder="Összeg Ft-ban">
+
+    <label for="costCenter">Költséghely *</label>
+    <select id="costCenter">
+      <option value="" disabled selected>Válassz költséghelyet</option>
+    </select>
+
+    <label for="paymentMethod">Fizetési mód *</label>
+    <select id="paymentMethod">
+      <option value="" disabled selected>Válassz fizetési módot</option>
+    </select>
+
+    <label for="expenseExtraSetting">Elszámolási kategória (Opcionális)</label>
+    <select id="expenseExtraSetting">
+      <option value="" selected>Válassz kategóriát (Opcionális)</option>
+    </select>
+
+  
+    <!-- SZÁMLA JELÖLŐNÉGYZET (Van / Nincs) -->
+  <div style="margin-top: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; background: #f8fafc; padding: 14px 18px; border-radius: 12px; border: 1px solid #cbd5e1;">
+    <input type="checkbox" id="hasInvoiceCheckbox" style="width: 28px; height: 28px; accent-color: #2563eb; cursor: pointer;">
+    <label for="hasInvoiceCheckbox" style="margin: 0; font-size: 26px; font-weight: 700; color: #1e293b; cursor: pointer; user-select: none;">
+      Számla kiadás 
+    </label>
+  </div>
+
+    <label for="comment">Megjegyzés</label>
+    <textarea id="comment" placeholder="Megjegyzés"></textarea>
+
+    <label>Blokk feltöltése</label>
+    <div class="upload-box">
+      <div class="upload-buttons">
+        <label for="receipt">📷 Blokk fotózása</label>
+        <input type="file" id="receipt" accept="image/*" capture="environment">
+
+        <label for="receiptFile">📎 Fájl csatolása</label>
+        <input type="file" id="receiptFile" accept="image/*,.pdf" multiple>
+      </div>
+      <div id="receiptPreview"></div>
+    </div>
+
+    <button id="saveButton">Mentés</button>
+    <div id="expenseStatusProgress" class="status-progress hidden" style="margin-top: 15px; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; text-align: center; border: 1px solid #cbd5e1;"></div>
+  </div>
+</div>
+
+<!-- 3. KÉPERNYŐ: BEVÉTEL RÖGZÍTŐ -->
+<div id="incomeScreen" class="hidden">
+  <button id="backToDashFromIncomeBtn" class="btn-back">⬅ Vissza a Dashboardra</button>
+
+  <div class="card">
+    <h2 style="color: #2e7d32;">Bevétel rögzítése</h2>
+
+    <label for="incomeDate">Dátum *</label>
+    <input type="date" id="incomeDate">
+
+    <label for="incomeAmount">Összeg (Ft / fő) *</label>
+    <input type="number" id="incomeAmount" placeholder="Összeg Ft-ban">
+
+    <label for="incomePurpose">Befizetés célja *</label>
+    <select id="incomePurpose">
+      <option value="" disabled selected>Válassz célt</option>
+    </select>
+
+    <label for="incomePaymentMethod">Befizetés módja *</label>
+    <select id="incomePaymentMethod">
+      <option value="" disabled selected>Válassz módot (Pl. Készpénz / Utalás)</option>
+    </select>
+
+    <label>Befizető(k) neve *</label>
+    <div class="custom-select-wrapper">
+      <div id="payerSelectTrigger" class="custom-select-trigger">
+        <span id="payerSelectText">Válassz befizető(k)et...</span>
+        <span>▼</span>
+      </div>
+
+      <div id="payersDropdownPanel" class="dropdown-panel hidden">
+        <div id="payersCheckboxList">
+          <p style="color: #888; font-size: 14px; text-align: center;">Nevek betöltése...</p>
+        </div>
+
+        <label class="checkbox-item">
+          <input type="checkbox" id="cb_other_payer">
+          Egyéb (manuális név)
+        </label>
+        
+        <div id="customPayerContainer" class="hidden" style="margin-top: 8px;">
+          <input type="text" id="customPayerInput" placeholder="Írd be a befizető nevét">
+        </div>
+      </div>
+    </div>
+
+    <label for="incomeComment" style="margin-top: 12px;">Megjegyzés</label>
+    <textarea id="incomeComment" placeholder="Megjegyzés"></textarea>
+
+    <button id="saveIncomeBtn" style="background: #2e7d32; margin-top: 16px;">Mentés</button>
+    <div id="incomeStatusProgress" class="status-progress hidden" style="margin-top: 15px; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; text-align: center; border: 1px solid #a5d6a7;"></div>
+  </div>
+</div>
+
+    <!-- 4. KÉPERNYŐ: PÉNZMOZGÁS RÖGZÍTŐ -->
+    <div id="transferScreen" class="hidden">
+      <button id="backToDashFromTransferBtn" class="btn-back">⬅ Vissza a Dashboardra</button>
+
+      <div class="card">
+        <h2 style="color: #0288d1;">Készpénz mozgatása</h2>
+
+        <label for="transferDate">Dátum *</label>
+        <input type="date" id="transferDate">
+
+        <label for="transferType">Tranzakció típusa *</label>
+        <select id="transferType">
+          <option value="Készpénz befizetése számlára" selected>Készpénz befizetése számlára</option>
+          <option value="Készpénz felvétele">Készpénz felvétele</option>
+        </select>
+
+        <label for="transferAmount">Összeg (Ft) *</label>
+        <input type="number" id="transferAmount" placeholder="Összeg Ft-ban">
+
+        <label for="transferProject">Kapcsolódó projekt (Opcionális)</label>
+        <select id="transferProject">
+          <option value="" selected>-- Nincs projekthez kötve --</option>
+        </select>
+
+        <label for="transferComment">Megjegyzés</label>
+        <textarea id="transferComment" placeholder="Megjegyzés (pl. ki intézte)"></textarea>
+
+        <div id="transferStatusProgress" class="hidden" style="margin-top: 15px; margin-bottom: 10px; padding: 12px; background-color: #f0f4f8; border-radius: 8px; font-weight: bold; font-size: 16px; text-align: center;"></div>
+
+        <button id="saveTransferBtn" style="background: #0288d1; margin-top: 10px;">Mentés</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Projektek kezelése FELUGRÓ ABLAK -->
+<div id="projectModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);">
+  <div style="background-color: #ffffff; margin: 2% auto; padding: 32px 36px; border-radius: 18px; width: 92%; max-width: 760px; min-height: 750px; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column;">
+    
+    <!-- Fejléc -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px;">
+      <h3 style="margin: 0; color: #0f172a; font-size: 28px; font-weight: 700;">📁 Projektek kezelése</h3>
+      <span onclick="closeProjectModal()" style="color: #94a3b8; font-size: 36px; font-weight: bold; cursor: pointer; line-height: 1;">&times;</span>
+    </div>
+    
+    <!-- Új projekt létrehozása blokk -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; margin-bottom: 28px;">
+      <h4 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 700; color: #334155;">Új projekt létrehozása</h4>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+        <input type="text" id="newProjectName" placeholder="Projekt neve (pl. Őszi kirándulás 2026)" style="width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; box-sizing: border-box;" />
+        
+        <select id="newProjectType" style="width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font-size: 15px; box-sizing: border-box;">
+          <option value="">Válassz típust...</option>
+        </select>
+      </div>
+      
+      <button type="button" onclick="handleCreateProject()" style="width: 100%; background-color: #4f46e5; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 20px;">
+        Új projekt mentése
+      </button>
+
+      <!-- Mentés státuszüzenet helye (középre igazítva) -->
+      <div id="projectSaveStatus" style="margin-top: 10px; font-weight: 600; font-size: 16px; min-height: 24px; text-align: center;"></div>
+    </div>
+
+    <!-- Aktív projektek listája blokk -->
+    <div style="border-top: 2px solid #e2e8f0; padding-top: 22px; flex-grow: 1; display: flex; flex-direction: column;">
+      <h4 style="margin: 0 0 16px 0; font-size: 28px; font-weight: 700; color: #1e293b;">Aktív projektek</h4>
+      
+      <div id="projectListContainer" style="max-height: 480px; overflow-y: auto; padding-right: 6px; flex-grow: 1;">
+        <p style="color: #64748b; font-size: 18px; margin: 0;">Projektek betöltése...</p>
+      </div>
+
+
+      <!-- Lezárási státuszüzenet helye (középre igazítva) -->
+    <div id="projectActionStatus" style="margin-top: 10px; font-weight: 600; font-size: 16px; min-height: 24px; text-align: center;"></div>
+    </div>
+
+  </div>
+</div>
+
+  <?!= include('javascript'); ?>
+  <?!= include("dialogs"); ?>
+
+</body>
+</html>

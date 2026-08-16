@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: 'Segoe UI', Arial, sans-serif; padding: 15px; color: #333; margin: 0; background-color: #f8f9fa; }
+      .card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-bottom: 12px; }
+      .field { margin-bottom: 12px; }
+      label { font-weight: 600; display: block; margin-bottom: 4px; font-size: 13px; color: #495057; }
+      input, select { width: 100%; padding: 8px 10px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 5px; font-size: 13px; }
+      button { background-color: #0d6efd; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: 600; font-size: 14px; }
+      button:hover { background-color: #0b5ed7; }
+      .picker-btn { background-color: #198754; font-size: 13px; margin-top: 5px; }
+      .picker-btn:hover { background-color: #157347; }
+      .picker-btn:disabled { background-color: #6c757d; cursor: not-allowed; }
+      #status { margin-top: 10px; font-size: 13px; text-align: center; font-weight: bold; }
+    </style>
+    
+    <!-- Gyári Google API betöltése -->
+    <script src="https://apis.google.com/js/api.js"></script>
+  </head>
+  <body>
+
+    <div class="card">
+      <div class="field">
+        <label>Csoport azonosító (Csoport_ID):</label>
+        <input type="text" id="csoportId" placeholder="pl. csoport_07">
+      </div>
+
+      <div class="field">
+        <label>Város:</label>
+        <select id="varos">
+          <? if (cities && cities.length > 0) { ?>
+            <? for (var i = 0; i < cities.length; i++) { ?>
+              <option value="<?= cities[i] ?>"><?= cities[i] ?></option>
+            <? } ?>
+          <? } else { ?>
+            <option value="">-- Töltsd ki a Városok lapot! --</option>
+          <? } ?>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Új Blokkmappa Neve:</label>
+        <input type="text" id="folderName" placeholder="pl. Csoport 07 Blokkok">
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Mappa Helye a Drive-on:</label>
+      <input type="text" id="selectedFolderDisplay" value="Google Drive (Gyökérmappa)" readonly style="background-color: #e9ecef;">
+      <input type="hidden" id="selectedFolderId" value="root">
+
+      <button type="button" id="drivePickerBtn" class="picker-btn" onclick="openDrivePicker()">📁 Mappa kiválasztása a Drive-ból...</button>
+    </div>
+
+    <button onclick="submitForm()">Létrehozás és Regisztráció</button>
+    <div id="status"></div>
+
+    <script>
+      let pickerApiLoaded = false;
+
+      // Google Picker API betöltése
+      gapi.load('picker', { 
+        'callback': () => { pickerApiLoaded = true; },
+        'onerror': () => { alert("Nem sikerült betölteni a Google Picker könyvtárat."); }
+      });
+
+      function openDrivePicker() {
+        const btn = document.getElementById('drivePickerBtn');
+        btn.disabled = true;
+        btn.innerText = "⏳ Betöltés...";
+
+        // Tokent kérünk a szervertől
+        google.script.run
+          .withSuccessHandler(function(token) {
+            btn.disabled = false;
+            btn.innerText = "📁 Mappa kiválasztása a Drive-ból...";
+            createPicker(token);
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerText = "📁 Mappa kiválasztása a Drive-ból...";
+            alert("Hiba a token lekérésekor: " + err);
+          })
+          .getOAuthToken();
+      }
+
+      function createPicker(oauthToken) {
+        try {
+          const myDriveView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+            .setIncludeFolders(true)
+            .setSelectFolderEnabled(true)
+            .setLabel("Saját meghajtó");
+
+          const sharedDrivesView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+            .setIncludeFolders(true)
+            .setSelectFolderEnabled(true)
+            .setEnableDrives(true)
+            .setLabel("Megosztott meghajtók");
+
+          const sharedWithMeView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+            .setIncludeFolders(true)
+            .setSelectFolderEnabled(true)
+            .setOwnedByMe(false)
+            .setLabel("Velem megosztva");
+
+          const origin = (google.script && google.script.host && google.script.host.origin) 
+                          ? google.script.host.origin 
+                          : "https://docs.google.com";
+
+          const picker = new google.picker.PickerBuilder()
+            .addView(myDriveView)
+            .addView(sharedDrivesView)
+            .addView(sharedWithMeView)
+            .setOAuthToken(oauthToken)
+            .setOrigin(origin)
+            .setCallback(pickerCallback)
+            .setTitle("Válaszd ki a célmappát")
+            .setSize(1080, 580) // 👈 A FolderPicker ablak mérete jelentősen megnövelve!
+            .build();
+
+          picker.setVisible(true);
+        } catch (e) {
+          alert("Hiba a mappaáthelyező ablak megnyitásakor: " + e.message);
+        }
+      }
+
+      function pickerCallback(data) {
+        if (data.action == google.picker.Action.PICKED) {
+          const doc = data.docs[0];
+          document.getElementById('selectedFolderDisplay').value = doc.name;
+          document.getElementById('selectedFolderId').value = doc.id;
+        }
+      }
+
+      function submitForm() {
+        const data = {
+          csoportId: document.getElementById('csoportId').value.trim(),
+          varos: document.getElementById('varos').value,
+          folderName: document.getElementById('folderName').value.trim(),
+          parentFolderId: document.getElementById('selectedFolderId').value
+        };
+
+        if (!data.csoportId || !data.folderName || !data.varos) {
+          alert("Kérjük, töltsön ki minden mezőt!");
+          return;
+        }
+
+        document.getElementById('status').innerText = "⏳ Mappa létrehozása folyamatban...";
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if(res.success) {
+              document.getElementById('status').innerHTML = "✅ Sikeresen létrehozva!";
+              setTimeout(() => google.script.host.close(), 1500);
+            } else {
+              document.getElementById('status').innerText = "❌ Hiba: " + res.message;
+            }
+          })
+          .createGroupAndFolder(data);
+      }
+    </script>
+  </body>
+</html>

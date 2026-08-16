@@ -1,0 +1,707 @@
+<style>
+  :root {
+    --bg-body: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+    
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
+
+    --expense: #dc2626;
+    --expense-hover: #b91c1c;
+
+    --income: #16a34a;
+    --income-hover: #15803d;
+    --income-light: #f0fdf4;
+
+    --transfer: #0284c7;
+    --transfer-hover: #0369a1;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    padding: 16px;
+    line-height: 1.5;
+  }
+
+  /* További +5%-al növelt projektterület (828px * 1.05 = 870px) */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Kártyák belső margója */
+  .card {
+    background: var(--card-bg);
+    padding: 31px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 26px;
+    transition: var(--transition);
+  }
+
+  .card h2 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 21px;
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+  }
+
+  /* Diagram konténer */
+  .chart-container {
+    position: relative;
+    height: 416px;
+    width: 100%;
+    margin-top: 13px;
+  }
+
+  .action-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 21px;
+    margin-top: 21px;
+  }
+
+  /* Akciógombok: +50%-al növelt betűméret és ikonok */
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    border-radius: var(--radius-xl);
+    font-size: 30px; /* 20px -> 30px (+50%) */
+    font-weight: 700;
+    border: none;
+    margin-top: 0;
+    cursor: pointer;
+    transition: var(--transition);
+    min-height: 160px;
+  }
+
+  .action-btn span:first-child {
+    font-size: 63px; /* 42px -> 63px (+50%) */
+    margin-bottom: 10px;
+  }
+
+  .action-btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn-income {
+    background: var(--income);
+    color: white;
+    box-shadow: 0 8px 16px -4px rgba(22, 163, 74, 0.3);
+  }
+  .btn-income:hover { background: var(--income-hover); }
+
+  .btn-expense {
+    background: var(--expense);
+    color: white;
+    box-shadow: 0 8px 16px -4px rgba(220, 38, 38, 0.3);
+  }
+  .btn-expense:hover { background: var(--expense-hover); }
+
+  .btn-transfer {
+    background: var(--transfer);
+    color: white;
+    box-shadow: 0 8px 16px -4px rgba(2, 132, 199, 0.3);
+    width: 100%;
+    margin-top: 16px;
+    flex-direction: row;
+    gap: 16px;
+    padding: 21px;
+    font-size: 30px; /* +50% betűméret */
+    min-height: auto;
+  }
+  .btn-transfer span:first-child {
+    font-size: 42px; /* 28px -> 42px (+50%) */
+    margin-bottom: 0;
+  }
+  .btn-transfer:hover { background: var(--transfer-hover); }
+
+  .btn-back {
+    background: #64748b;
+    color: white;
+    margin-bottom: 21px;
+    margin-top: 0;
+    padding: 16px 23px;
+    font-size: 50px;
+    border-radius: var(--radius-md);
+  }
+
+ label {
+  display: block;
+  margin-top: 32px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 38px; /* <--- CÍMKÉK BETŰMÉRETE (18px volt) */
+  color: #334155;
+}
+
+input:not([type="checkbox"]):not([type="file"]), 
+select, 
+.custom-select-trigger {
+  width: 100%;
+  height: 52px;                  /* Finom, kompakt magasság (nem batár) */
+  padding: 0 12px;               /* Belső margó a szöveg körül */
+  font-size: 28px !important;               /* Visszafogott, normál betűméret */
+  font-weight: 400;              /* Letisztult, nem túl vastag betű */
+  color: #1e293b;                /* Jól olvasható sötétszürke */
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;     /* Vékony, lágy szürke keret */
+  border-radius: 8px;            /* Elegáns, nem túltolt kerekítés */
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  margin-top: 0 !important;      /* Eltünteti az esetleges eltolásokat */
+}
+
+
+input:focus, 
+select:focus, 
+textarea:focus, 
+.custom-select-trigger:focus {
+  border-color: #3b82f6;                          /* Diszkrét kék keret */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12); /* Finom kék derengés */
+}
+
+textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  font-size: 36px;
+  font-weight: 400;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+  .upload-box {
+  border: 2px dashed #93c5fd;
+  padding: 20px 16px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  background: var(--primary-light);
+  margin-top: 10px;
+  transition: var(--transition);
+}
+
+/* ÚJ: A két gomb egymás melletti/alatti elrendezése */
+.upload-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  flex-wrap: wrap; /* Mobilon, ha nem fér el egymás mellett, szépen egymás alá ugrik */
+}
+
+.upload-box label {
+  color: var(--primary);
+  cursor: pointer;
+  margin: 0;
+  font-size: 32px; /* 26px helyett 20px, hogy két gombként mobilon is kényelmesen elférjenek */
+  font-weight: 700;
+  padding: 12px 12px;
+  border: 2px solid #1e3a8a;;
+  transition: var(--transition);
+}
+
+.upload-box label:hover {
+  background: rgba(147, 197, 253, 0.25); /* Finom visszajelzés rávitelnél */
+}
+
+input[type="file"] { display: none; }
+
+
+
+  button {
+    width: 100%;
+    padding: 22px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 50px;
+    font-weight: 700;
+    margin-top: 26px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  button:active { transform: scale(0.99); }
+
+  .custom-select-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 18px 21px;
+    border-radius: var(--radius-md);
+    font-size: 30px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    margin-top: 8px;
+    transition: var(--transition);
+  }
+
+.dropdown-panel {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox-item {
+  padding: 8px 12px;
+  font-size: 32px;
+}
+
+input::placeholder, textarea::placeholder {
+  font-size: 28px; /* <--- Helykitöltő szöveg mérete */
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 28px;
+  height: 28px;
+  margin-right: 16px;
+  accent-color: var(--income);
+  cursor: pointer;
+}
+
+/* Egyéb név beviteli mező finomhangolása a lenyíló panelben */
+#customPayerInput {
+  margin-top: 4px;
+  font-size: 32px;
+  padding: 10px 12px;
+}
+
+  .dialog {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+  }
+
+  .dialog.hidden, .hidden { display: none !important; }
+
+  .dialog-content {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    padding: 42px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 750px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    animation: modalTopPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: 0 !important;
+    box-sizing: border-box;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+
+.dialog-content h2 {
+  font-size: 36px!important;  /* <- Cím mérete */
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+  @keyframes modalTopPop {
+    from { opacity: 0; transform: translate(-50%, -15px) scale(0.96); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  }
+
+  .summary-box {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 26px 31px;
+    margin: 26px 0;
+    font-size: 26px!important;
+    color: #1e293b;
+    line-height: 1.8;
+  }
+
+  .summary-box p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 13px;
+    border-bottom: 1px dashed #cbd5e1;
+    padding-bottom: 10px;
+    font-size: 38px!important;
+  }
+
+  .status-progress {
+    margin: 21px 0;
+    padding: 21px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 24px;
+    text-align: center;
+  }
+
+  .dialog-actions { display: flex; gap: 21px; margin-top: 31px; }
+  .dialog-actions.vertical { flex-direction: column; gap: 16px; }
+
+  .dialog-actions button {
+    flex: 1;
+    margin-top: 0;
+    padding: 23px 26px;
+    font-size: 30px;
+    font-weight: 800;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    min-height: 73px;
+  }
+
+  .btn-secondary { background: #cbd5e1 !important; color: #334155 !important; }
+
+  /* GARANTÁLT ZÖLD MENTÉS GOMBOK MINDEN MODALBAN ÉS ÖSSZESÍTŐN: */
+  .btn-confirm-expense,
+  .btn-confirm-income,
+  .btn-confirm,
+  .btn-save,
+  .dialog-actions button:not(.btn-secondary),
+  #btnConfirmExpense,
+  #btnConfirmIncome,
+  #btnSaveExpense,
+  #btnSaveIncome {
+    background-color: #16a34a !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+  }
+
+  .btn-confirm-expense:hover,
+  .btn-confirm-income:hover,
+  .dialog-actions button:not(.btn-secondary):hover {
+    background-color: #15803d !important;
+    background: #15803d !important;
+  }
+
+  .text-center { text-align: center; }
+
+  /* Fejléc stílusai */
+  .paykal-header {
+    min-height: 166px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    border-radius: 24px;
+    margin-bottom: 26px;
+    padding: 20px;
+    box-shadow: 0 12px 24px -6px rgba(37, 99, 235, 0.35);
+  }
+
+  .paykal-header h1 {
+    font-size: 72px;
+    font-weight: 900;
+    color: #ffffff !important;
+    letter-spacing: -1px;
+    line-height: 1.2;
+  }
+
+  .paykal-header .subtitle {
+    color: #ffffff !important;
+    line-height: 1.7;
+    font-size: 30px;
+    font-weight: 500;
+  }
+
+  .balance-card {
+    text-align: center;
+    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    border: 1.5px solid #bae6fd;
+    border-radius: 24px;
+    padding: 36px 26px;
+    box-shadow: 0 12px 30px -5px rgba(2, 132, 199, 0.08);
+    margin-bottom: 26px;
+  }
+
+  .balance-label {
+    font-size: 40px;
+    font-weight: 800;
+    color: #0369a1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* MEGDUPLÁZOTT EGYESÍTETT EGYENLEG (224px -> 448px) */
+  .total-balance-amount {
+    font-size: 55px !important;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 10px 0 26px 0;
+    letter-spacing: -6px;
+    line-height: 1;
+    word-break: break-word;
+  }
+
+  .balance-bar-wrapper {
+    display: flex;
+    height: 18px;
+    width: 100%;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 26px;
+  }
+
+  .balance-bar { height: 100%; transition: width 0.4s ease; }
+  .cash-bar { background: #16a34a; }
+  .bank-bar { background: #2563eb; }
+
+  .balance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .balance-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 21px 16px;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  .sub-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .sub-amount {
+    display: block;
+    font-size: 40px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+  }
+
+  .dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .cash-dot { background: #16a34a; }
+  .bank-dot { background: #2563eb; }
+
+  /* Időszakszűrő gombok: +50% betűméret (26px) */
+  .time-filter-group {
+    display: flex;
+    background: #f1f5f9;
+    padding: 5px;
+    border-radius: 12px;
+    gap: 5px;
+    margin-bottom: 21px;
+  }
+
+  .time-btn {
+    flex: 1;
+    padding: 12px 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 26px; /* 17px -> 26px (+50%) */
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 0;
+  }
+
+  .time-btn.active {
+    background: #ffffff;
+    color: #1e3a8a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* MEGDUBÁLOTT LOGÓ MÉRETEK KISZOLGÁLÁSA (2x) */
+  .paykal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    padding: 31px 26px;
+    margin-top: 31px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-xl);
+    gap: 21px;
+  }
+
+  .footer-logo:first-child img {
+    max-height: 468px; /* 234px -> 468px (2x) */
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .footer-logo:last-child {
+    margin-left: auto;
+  }
+
+  .footer-logo:last-child img {
+    max-height: 234px !important; /* 117px -> 234px (2x) */
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  /* ==========================================
+   MOBILRA OPTIMALIZÁLT STÍLUSOK (Reszponzivitás)
+   ========================================== */
+@media (max-width: 600px) {
+  body {
+    padding: 6px 4px; /* Minimális margó a telefon fizikai szélétől */
+  }
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Kártyák belső margójának csökkentése mobilon */
+  .card, .balance-card {
+    padding: 20px 12px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Fejléc mobilon */
+  .paykal-header {
+    padding: 16px 10px;
+    min-height: auto;
+  }
+  
+  .paykal-header h1 {
+    font-size: 38px;
+  }
+
+  /* A FŐ EGYENLEG mobilon automatikusan igazodik a kijelző szélességéhez (vw = Viewport Width) */
+  .total-balance-amount {
+    font-size: 14vw !important; /* Mindig pontosan bekapcsolja a mobil kijelzőjébe */
+    letter-spacing: -1px;
+    margin: 8px 0 16px 0;
+  }
+
+  /* Akciógombok finomítása mobilon */
+  .action-btn {
+    padding: 18px 10px;
+    font-size: 22px;
+    min-height: 120px;
+  }
+
+  .action-btn span:first-child {
+    font-size: 42px;
+  }
+
+  /* Lábléc és logók igazítása mobilon */
+  .paykal-footer {
+    padding: 16px 12px;
+    flex-direction: column; /* Egymás alá rakja a logókat mobilon */
+    gap: 16px;
+  }
+
+  .footer-logo:last-child {
+    margin-left: 0;
+  }
+
+  .footer-logo:first-child img,{
+    max-height: 270px!important;
+  }
+  .footer-logo:last-child img {
+    max-height: 320px!important;
+  }
+}
+
+
+/* 1. A gyári select ÉS az egyedi Befizető mező betűtípusának és méretének szinkronizálása */
+select, 
+.custom-select-trigger {
+  font-family: inherit !important; /* Átveszi az oldal saját betűtípusát */
+  font-size: 30px !important;      /* Pontosan 15px-es betűméret mindkét mezőben */
+  font-weight: 400 !important;     /* Normál, azonos betűvastagság */
+  line-height: 1.5;                /* Egyforma sormagasság */
+  
+  height: 52px;                    /* Egyforma mezőmagasság */
+  padding: 0 12px;                 /* Egyforma belső margó */
+  box-sizing: border-box;
+}
+
+.dialog-desc {
+  font-size: 30px!important;  /* <- Írd át akkorára, amekkorára szeretnéd */
+  font-weight: 700;            /* Félkövér kiemelés */
+  line-height: 1.4;
+  margin: 12px 0;
+}
+
+.check-title {
+  font-size: 44px!important;  /* <- Írd át a kívánt méretre */
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+/* A feltöltött képek (1. kép..., 2. kép...) feliratainak mérete */
+#receiptPreview {
+  font-size: 25px!important;   /* <- Írd át a kívánt méretre */
+ 
+  color: #0f172a;
+  margin-top: 10px;
+}
+
+/* Ha a JavaScript külön sorokat/bekezdéseket (<p>, <div>, <span>) hoz létre a preview-n belül */
+#receiptPreview p,
+#receiptPreview div,
+#receiptPreview span {
+  font-size: 25px!important;   /* <- Írd át a kívánt méretre */
+    margin-top: 6px;
+}
+
+
+</style>
